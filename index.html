@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>大易實體鍵盤轉接器 | iPad 離線完整版</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f172a">
     <style>
         :root {
             --primary: #6366f1;
@@ -95,7 +101,7 @@
         <h1>⌨️ 大易實體鍵盤轉接器</h1>
         <div class="version-line">
             <span>版權所有 ＆ 製作：WHY</span>
-            <span>VERSION: 260413-1617 (iPad 離線完整版)</span>
+            <span>VERSION: 260414-1700 (完整 PWA 離線版)</span>
         </div>
     </header>
 
@@ -258,7 +264,14 @@
     }
 
     // 確保 dayi_data.js 載入後才啟動
-    window.addEventListener('load', startApp);
+    window.addEventListener('load', () => {
+        startApp();
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('Service Worker registered', reg))
+            .catch(err => console.error('Service Worker error', err));
+        }
+    });
 </script>
 <!-- 這裡載入外部巨大的字庫檔案 -->
 <script src="dayi_data.js"></script>

@@ -7,6 +7,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="大易轉接器">
     <meta name="theme-color" content="#0f172a">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icon.svg">
     <title>大易實體鍵盤轉接器 | iPad 離線完整版</title>
     <style>
         :root {
@@ -101,7 +104,7 @@
         <h1>⌨️ 大易實體鍵盤轉接器</h1>
         <div class="version-line">
             <span>版權所有 ＆ 製作：WHY</span>
-            <span>VERSION: 260413-1706 (iPad PWA 離線版)</span>
+            <span>VERSION: 260414-1700 (完整 PWA 離線版)</span>
         </div>
     </header>
 
@@ -240,19 +243,13 @@
     }
 
     // Service Worker for offline caching (PWA)
-    if ('serviceWorker' in navigator) {
-        try {
-            var swCode = "self.addEventListener('install',function(e){self.skipWaiting()});" +
-                "self.addEventListener('activate',function(e){e.waitUntil(clients.claim())});" +
-                "self.addEventListener('fetch',function(e){" +
-                "e.respondWith(caches.match(e.request).then(function(r){" +
-                "return r||fetch(e.request).then(function(resp){" +
-                "var c=resp.clone();caches.open('dayi-v1').then(function(cache){cache.put(e.request,c)});" +
-                "return resp}).catch(function(){return new Response('offline',{headers:{'Content-Type':'text/plain'}})})}))})";
-            var blob = new Blob([swCode], {type: 'application/javascript'});
-            navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(function(){});
-        } catch(e) {}
-    }
+    window.addEventListener('load', () => {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('Service Worker registered', reg))
+            .catch(err => console.error('Service Worker error', err));
+        }
+    });
 </script>
 </body>
 </html>
