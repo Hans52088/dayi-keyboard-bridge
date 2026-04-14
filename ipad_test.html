@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>iPad JS 診斷</title>
+<style>
+body{font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;
+min-height:100vh;margin:0;background:#1a1a2e;color:#fff;font-size:24px;text-align:center}
+.box{background:rgba(255,255,255,0.1);border-radius:16px;padding:40px;margin:10px;max-width:500px}
+#r1,#r2,#r3,#r4{margin:15px 0;padding:15px;border-radius:10px;font-size:20px}
+.pass{background:rgba(16,185,129,0.2);color:#10b981}
+.fail{background:rgba(244,63,94,0.2);color:#f43f5e}
+.wait{background:rgba(251,191,36,0.2);color:#fbbf24}
+</style>
+</head><body>
+<div class="box">
+<h2>🔍 iPad JavaScript 診斷工具</h2>
+<div id="r1" class="wait">⏳ 測試 1：基本 JS 執行 — 等待中...</div>
+<div id="r2" class="wait">⏳ 測試 2：setTimeout — 等待中...</div>
+<div id="r3" class="wait">⏳ 測試 3：JSON.parse — 等待中...</div>
+<div id="r4" class="wait">⏳ 測試 4：鍵盤事件 — 請按任意鍵</div>
+<div style="margin-top:20px;font-size:14px;opacity:0.6">
+如果所有項目都停在「等待中」，表示 JavaScript 完全沒有執行。<br>
+請嘗試用 Safari 而非「檔案」App 開啟此檔案。
+</div>
+</div>
+
+<script>
+// 測試 1：立即執行
+document.getElementById('r1').className = 'pass';
+document.getElementById('r1').textContent = '✅ 測試 1：基本 JS 執行 — 通過！';
+
+// 測試 2：setTimeout
+setTimeout(function(){
+    document.getElementById('r2').className = 'pass';
+    document.getElementById('r2').textContent = '✅ 測試 2：setTimeout — 通過！';
+}, 100);
+
+// 測試 3：JSON.parse
+try {
+    var test = JSON.parse('{"a":["人","入"],"b":["馬"]}');
+    if (test.a[0] === '人') {
+        document.getElementById('r3').className = 'pass';
+        document.getElementById('r3').textContent = '✅ 測試 3：JSON.parse — 通過！(' + test.a.length + ' chars)';
+    }
+} catch(e) {
+    document.getElementById('r3').className = 'fail';
+    document.getElementById('r3').textContent = '❌ 測試 3：JSON.parse 錯誤 — ' + e.message;
+}
+
+// 測試 4：鍵盤事件
+document.addEventListener('keydown', function(e){
+    document.getElementById('r4').className = 'pass';
+    document.getElementById('r4').textContent = '✅ 測試 4：偵測到按鍵 — ' + e.key;
+});
+</script>
+</body></html>
