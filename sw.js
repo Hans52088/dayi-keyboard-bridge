@@ -5,7 +5,7 @@ const urlsToCache = [
   './dayi_data.js',
   './Dayi-ActualKB-transfer(Offline).html',
   './manifest.json',
-  './icon.svg'
+  './icon.png'
 ];
 
 self.addEventListener('install', event => {
