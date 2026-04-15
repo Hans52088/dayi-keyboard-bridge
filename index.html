@@ -92,6 +92,18 @@
         #copy-toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--success); color: white; padding: 12px 24px; border-radius: 12px; transition: 0.5s; }
         #copy-toast.show { transform: translateX(-50%) translateY(0); }
         .empty-display::before { content: attr(placeholder); color: var(--text-muted); opacity: 0.4; }
+
+        /* 隱藏的輸入框，用來在 iPad 上捕捉實體鍵盤事件 */
+        #hidden-input {
+            position: fixed;
+            top: -9999px;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            font-size: 16px; /* 防止 iOS 自動縮放 */
+            caret-color: transparent;
+        }
     </style>
 </head>
 <body>
@@ -101,11 +113,13 @@
         <h1>⌨️ 大易實體鍵盤轉接器</h1>
         <div class="version-line">
             <span>版權所有 ＆ 製作：WHY</span>
-            <span>VERSION: 260414-1700 (完整 PWA 離線版)</span>
+            <span>VERSION: 260415-0334 (完整 PWA 離線版)</span>
         </div>
     </header>
 
-    <div id="display-area" placeholder="請在此開始輸入..." class="empty-display"></div>
+    <!-- 隱藏的 input，iPad Safari PWA 模式需要一個可聚焦元素才能接收鍵盤事件 -->
+    <input id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="none" aria-hidden="true">
+    <div id="display-area" placeholder="點擊此處開始輸入..." class="empty-display"></div>
     
     <div class="action-row">
         <div class="composition-area" id="composition"></div>
@@ -202,12 +216,40 @@
         updateUI();
     }
 
-    document.addEventListener('keydown', (e) => {
+    // ═══════════════════════════════════════════════════════════════
+    // iPad Safari PWA 鍵盤焦點修正
+    // iPad 在 Standalone 模式下不會對無焦點的頁面發送 keydown 事件
+    // 必須用一個隱藏的 <input> 來捕捉鍵盤輸入
+    // ═══════════════════════════════════════════════════════════════
+    const hiddenInput = document.getElementById('hidden-input');
+
+    function ensureFocus() {
+        if (document.activeElement !== hiddenInput) {
+            hiddenInput.focus();
+        }
+    }
+
+    // 點擊頁面任何位置都要保持焦點在 hiddenInput
+    document.addEventListener('click', (e) => {
+        // 允許候選字按鈕的 onclick 先執行
+        setTimeout(ensureFocus, 10);
+    });
+    document.addEventListener('touchend', (e) => {
+        setTimeout(ensureFocus, 10);
+    });
+
+    // 監聽鍵盤事件（同時在 hiddenInput 和 document 上綁定，確保雙保險）
+    function handleKeyDown(e) {
         const key = e.key;
         const lowerKey = key.toLowerCase();
+
+        // 防止 iPad 的隱藏 input 累積文字
+        if (hiddenInput.value) hiddenInput.value = '';
+
         if ((currentBuffer.length > 0 || isPunctuationMode) && selectionKeys.hasOwnProperty(key)) e.preventDefault();
         if (key === '=') e.preventDefault();
         if (key === 'Backspace') {
+            e.preventDefault();
             if (isPunctuationMode) isPunctuationMode = false;
             else if (currentBuffer) currentBuffer = currentBuffer.slice(0, -1);
             else fullSentence = fullSentence.slice(0, -1);
@@ -225,10 +267,31 @@
                 return;
             }
         }
-        if (key === ' ' && currentBuffer.length === 0 && !isPunctuationMode) { fullSentence += " "; updateUI(); return; }
+        if (key === ' ' && currentBuffer.length === 0 && !isPunctuationMode) { e.preventDefault(); fullSentence += " "; updateUI(); return; }
         if (dayiMap[lowerKey]) {
+            e.preventDefault();
             if (isPunctuationMode) isPunctuationMode = false;
             if (currentBuffer.length < 4) { currentBuffer += lowerKey; updateUI(); }
+        }
+    }
+
+    hiddenInput.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    // 補充：若 iPad 的某些按鍵未觸發 keydown，用 input 事件做備援
+    hiddenInput.addEventListener('input', (e) => {
+        const val = hiddenInput.value;
+        if (val) {
+            // 逐字處理 input 中累積的文字
+            for (const ch of val) {
+                const lowerCh = ch.toLowerCase();
+                if (dayiMap[lowerCh]) {
+                    if (isPunctuationMode) isPunctuationMode = false;
+                    if (currentBuffer.length < 4) { currentBuffer += lowerCh; }
+                }
+            }
+            hiddenInput.value = '';
+            updateUI();
         }
     });
 
@@ -245,6 +308,8 @@
             </div>
         `).slice(0, 10).join('');
         displayArea.scrollTop = displayArea.scrollHeight;
+        // 保持焦點
+        ensureFocus();
     }
 
     function confirmCandidate(i) { fullSentence += candidatesArr[i]; currentBuffer = ""; updateUI(); }
@@ -266,6 +331,8 @@
     // 確保 dayi_data.js 載入後才啟動
     window.addEventListener('load', () => {
         startApp();
+        // 啟動後立即聚焦隱藏輸入框
+        ensureFocus();
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js')
             .then(reg => console.log('Service Worker registered', reg))
