@@ -113,7 +113,7 @@
         <h1>⌨️ 大易實體鍵盤轉接器</h1>
         <div class="version-line">
             <span>版權所有 ＆ 製作：WHY</span>
-            <span>VERSION: 260415-0334 (完整 PWA 離線版)</span>
+            <span>VERSION: 260415-1506 (完整 PWA 離線版)</span>
         </div>
     </header>
 
@@ -276,7 +276,7 @@
     }
 
     hiddenInput.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('keydown', handleKeyDown);
+    // 只在 hiddenInput 上監聽即可，不在 document 重複綁定（否則事件冒泡會導致重複觸發）
 
     // 補充：若 iPad 的某些按鍵未觸發 keydown，用 input 事件做備援
     hiddenInput.addEventListener('input', (e) => {
